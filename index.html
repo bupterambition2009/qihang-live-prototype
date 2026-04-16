@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>启航教育 - 直播交互原型</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,'PingFang SC','Helvetica Neue',sans-serif;background:#000;display:flex;justify-content:center;align-items:center;min-height:100vh}
+.phone{width:375px;height:812px;background:#f5f6fa;border-radius:40px;overflow:hidden;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+
+/* 状态栏 */
+.status-bar{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;font-size:12px;font-weight:600;position:absolute;top:0;left:0;right:0;z-index:100;color:#333}
+.status-bar.light{color:#fff}
+
+/* ===== 首页 ===== */
+.home-page{position:absolute;inset:0;background:#f5f6fa;transition:transform .4s cubic-bezier(.4,0,.2,1),opacity .3s;z-index:2;overflow-y:auto}
+.home-page.hidden{transform:translateY(20px);opacity:0;pointer-events:none}
+
+/* 导航栏 */
+.nav-bar{height:88px;padding-top:44px;background:linear-gradient(135deg,#1a5cff,#3d7aff);display:flex;align-items:center;justify-content:space-between;padding-left:16px;padding-right:16px;padding-bottom:12px}
+.nav-bar .logo{color:#fff;font-size:20px;font-weight:800;letter-spacing:1px}
+.nav-bar .logo span{font-size:11px;font-weight:400;opacity:.8;margin-left:4px}
+.nav-bar .nav-right{display:flex;gap:12px;align-items:center}
+.nav-bar .nav-right .icon-btn{width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;background:rgba(255,255,255,.15);border-radius:50%;cursor:pointer;border:none}
+
+/* 搜索栏 */
+.search-bar{margin:12px 16px;background:#fff;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:8px;color:#999;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.search-bar span{font-size:14px}
+
+/* Banner */
+.banner{margin:0 16px 16px;height:130px;border-radius:12px;background:linear-gradient(135deg,#1a3a8a,#2563eb,#3b82f6);position:relative;overflow:hidden;display:flex;align-items:center;padding:0 20px}
+.banner::after{content:'';position:absolute;right:-20px;top:-20px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.08)}
+.banner::before{content:'';position:absolute;right:30px;bottom:-30px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.05)}
+.banner-text{color:#fff;z-index:1}
+.banner-text h2{font-size:18px;font-weight:700;margin-bottom:4px}
+.banner-text p{font-size:12px;opacity:.85;line-height:1.5}
+.banner-text .tag{display:inline-block;background:rgba(255,255,255,.2);padding:2px 8px;border-radius:4px;font-size:11px;margin-top:6px}
+
+/* 功能入口 */
+.quick-nav{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:0 16px 16px;background:#fff;margin:0 16px 16px;border-radius:12px;padding:16px 8px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.quick-item{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer}
+.quick-item .qi-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.quick-item span{font-size:11px;color:#333;font-weight:500}
+
+/* 直播预告区 */
+.section-header{display:flex;justify-content:space-between;align-items:center;padding:0 16px;margin-bottom:12px}
+.section-header h3{font-size:16px;font-weight:700;color:#1a1a1a}
+.section-header .more{font-size:12px;color:#3d7aff;cursor:pointer}
+
+/* 正在直播 */
+.live-list{padding:0 16px;display:flex;flex-direction:column;gap:10px;padding-bottom:16px}
+.live-item{background:#fff;border-radius:12px;padding:12px;display:flex;gap:12px;cursor:pointer;transition:transform .15s;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.live-item:active{transform:scale(.98)}
+.live-item .thumb{width:120px;height:80px;border-radius:8px;position:relative;overflow:hidden;flex-shrink:0}
+.live-item .thumb .thumb-bg{width:100%;height:100%}
+.live-item:nth-child(1) .thumb-bg{background:linear-gradient(135deg,#e0e7ff,#c7d2fe)}
+.live-item:nth-child(2) .thumb-bg{background:linear-gradient(135deg,#dbeafe,#bfdbfe)}
+.live-item:nth-child(3) .thumb-bg{background:linear-gradient(135deg,#fce7f3,#fbcfe8)}
+.live-item .thumb .live-tag{position:absolute;top:6px;left:6px;background:#ff4757;color:#fff;font-size:9px;padding:1px 6px;border-radius:4px;font-weight:600;display:flex;align-items:center;gap:2px}
+.live-item .thumb .live-tag::before{content:'';width:4px;height:4px;background:#fff;border-radius:50%;animation:pulse 1.5s infinite}
+.live-item .thumb .subject{position:absolute;bottom:6px;left:6px;background:rgba(0,0,0,.5);color:#fff;font-size:9px;padding:1px 6px;border-radius:4px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.live-item .info{flex:1;display:flex;flex-direction:column;justify-content:space-between}
+.live-item .info .title{font-size:14px;font-weight:600;color:#1a1a1a;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.live-item .info .teacher{font-size:12px;color:#3d7aff;display:flex;align-items:center;gap:4px}
+.live-item .info .teacher img{width:16px;height:16px;border-radius:50%}
+.live-item .info .meta{display:flex;gap:10px;font-size:11px;color:#999}
+.live-item .info .meta span{display:flex;align-items:center;gap:2px}
+
+/* 即将开播 */
+.upcoming-list{padding:0 16px;display:flex;gap:10px;overflow-x:auto;padding-bottom:20px;-webkit-overflow-scrolling:touch}
+.upcoming-card{min-width:140px;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04);flex-shrink:0;cursor:pointer}
+.upcoming-card .uc-cover{height:80px;position:relative}
+.upcoming-card:nth-child(1) .uc-cover{background:linear-gradient(135deg,#fef3c7,#fde68a)}
+.upcoming-card:nth-child(2) .uc-cover{background:linear-gradient(135deg,#d1fae5,#a7f3d0)}
+.upcoming-card:nth-child(3) .uc-cover{background:linear-gradient(135deg,#ede9fe,#ddd6fe)}
+.upcoming-card:nth-child(4) .uc-cover{background:linear-gradient(135deg,#ffe4e6,#fecdd3)}
+.upcoming-card .uc-cover .time-tag{position:absolute;bottom:6px;left:6px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;padding:2px 6px;border-radius:4px}
+.upcoming-card .uc-info{padding:8px}
+.upcoming-card .uc-info .uc-title{font-size:12px;font-weight:600;color:#1a1a1a;line-height:1.3}
+.upcoming-card .uc-info .uc-teacher{font-size:11px;color:#666;margin-top:4px}
+
+/* 底部Tab */
+.bottom-nav{position:absolute;bottom:0;left:0;right:0;height:82px;background:#fff;border-top:1px solid #eee;display:flex;align-items:flex-start;justify-content:space-around;padding-top:8px;z-index:5}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:#999;cursor:pointer}
+.nav-item.active{color:#1a5cff}
+.nav-item .nav-icon{font-size:22px}
+
+/* ===== 直播页 ===== */
+.live-page{position:absolute;inset:0;background:#0a0e1a;z-index:3;transform:translateY(100%);transition:transform .5s cubic-bezier(.4,0,.2,1)}
+.live-page.show{transform:translateY(0)}
+
+.live-video{width:100%;height:100%;position:absolute}
+.live-video .video-bg{width:100%;height:100%;background:linear-gradient(180deg,#0f172a,#1e293b 50%,#0f172a)}
+
+/* 课件区域 - 模拟黑板 */
+.courseware{position:absolute;top:44px;left:12px;right:12px;height:220px;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.courseware .cw-header{height:28px;background:#f1f5f9;display:flex;align-items:center;padding:0 10px;gap:6px}
+.courseware .cw-header .dot{width:8px;height:8px;border-radius:50%}
+.courseware .cw-content{padding:16px;display:flex;flex-direction:column;gap:10px}
+.courseware .cw-content h4{font-size:15px;color:#1a1a1a;font-weight:700}
+.courseware .cw-content .formula{font-size:14px;color:#333;font-family:'Times New Roman',serif;line-height:1.8;padding:8px;background:#f8fafc;border-radius:6px;border-left:3px solid #3d7aff}
+.courseware .cw-content .step{font-size:12px;color:#666;line-height:1.6}
+.courseware .cw-content .highlight{color:#3d7aff;font-weight:600}
+
+/* 主播/老师画面（小窗）*/
+.teacher-cam{position:absolute;top:260px;right:16px;width:100px;height:140px;border-radius:10px;overflow:hidden;border:2px solid #3d7aff;box-shadow:0 4px 15px rgba(59,130,246,.3)}
+.teacher-cam .cam-bg{width:100%;height:100%;background:linear-gradient(135deg,#1e3a5f,#2d5a8e);display:flex;align-items:center;justify-content:center;flex-direction:column;color:#fff;font-size:10px;gap:4px}
+.teacher-cam .cam-bg .t-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#3d7aff,#1a5cff);display:flex;align-items:center;justify-content:center;font-size:18px}
+
+/* 直播顶部 */
+.live-top{position:absolute;top:44px;left:12px;display:flex;align-items:center;gap:8px;z-index:10}
+.teacher-info{display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.5);backdrop-filter:blur(10px);border-radius:16px;padding:4px 10px 4px 4px}
+.t-avatar-sm{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#3d7aff,#1a5cff);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px}
+.teacher-info .t-name{color:#fff;font-size:12px;font-weight:600}
+.teacher-info .t-badge{background:#fbbf24;color:#7c2d12;font-size:9px;padding:1px 5px;border-radius:3px;font-weight:600}
+.close-btn{position:absolute;top:44px;right:12px;width:32px;height:32px;background:rgba(0,0,0,.5);backdrop-filter:blur(10px);border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;border:none;z-index:10}
+.viewer-info{position:absolute;top:82px;left:12px;background:rgba(0,0,0,.5);backdrop-filter:blur(10px);border-radius:10px;color:#fff;font-size:10px;padding:3px 8px;display:flex;align-items:center;gap:4px;z-index:10}
+
+/* 聊天区 */
+.chat-area{position:absolute;bottom:140px;left:0;right:70px;max-height:180px;padding:0 12px;overflow:hidden;z-index:10;display:flex;flex-direction:column;justify-content:flex-end;gap:4px}
+.chat-msg{font-size:12px;text-shadow:0 1px 3px rgba(0,0,0,.7);animation:chatIn .3s ease}
+.chat-msg .name{font-weight:600}
+.chat-msg .sys{color:#fbbf24;font-style:italic}
+.chat-msg .name.blue{color:#60a5fa}
+.chat-msg .name.gold{color:#fbbf24}
+@keyframes chatIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* 互动按钮 */
+.side-actions{position:absolute;right:12px;bottom:200px;display:flex;flex-direction:column;gap:12px;z-index:10}
+.side-btn{width:40px;height:40px;background:rgba(0,0,0,.4);backdrop-filter:blur(6px);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;cursor:pointer;border:none}
+.side-btn .count{font-size:8px;margin-top:1px}
+
+/* 底部输入 */
+.live-bottom{position:absolute;bottom:0;left:0;right:0;padding:10px 12px 34px;display:flex;align-items:center;gap:8px;z-index:10}
+.chat-input{flex:1;height:36px;background:rgba(255,255,255,.12);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:0 14px;color:#fff;font-size:13px;outline:none}
+.chat-input::placeholder{color:rgba(255,255,255,.4)}
+.action-btn{width:36px;height:36px;background:rgba(255,255,255,.12);backdrop-filter:blur(10px);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;border:none;transition:transform .15s}
+.action-btn:active{transform:scale(.85)}
+.action-btn.primary{background:linear-gradient(135deg,#3d7aff,#1a5cff)}
+
+/* 飘心 */
+.float-hearts{position:absolute;bottom:180px;right:16px;z-index:15}
+.heart{position:absolute;bottom:0;font-size:18px;animation:floatUp 2s ease-out forwards}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-100px) scale(.4) translateX(15px)}}
+
+/* 课程进度条 */
+.progress-bar{position:absolute;top:275px;left:12px;right:128px;z-index:10}
+.progress-bar .pb-label{display:flex;justify-content:space-between;color:rgba(255,255,255,.6);font-size:10px;margin-bottom:4px}
+.progress-bar .pb-track{height:3px;background:rgba(255,255,255,.15);border-radius:2px;overflow:hidden}
+.progress-bar .pb-fill{height:100%;width:65%;background:linear-gradient(90deg,#3d7aff,#60a5fa);border-radius:2px;transition:width .3s}
+
+/* 课节信息 */
+.lesson-info{position:absolute;top:295px;left:12px;right:128px;z-index:10;color:rgba(255,255,255,.7);font-size:11px}
+.lesson-info .li-title{color:#fff;font-size:13px;font-weight:600;margin-bottom:2px}
+
+/* 签到弹窗 */
+.sign-modal{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);background:#fff;border-radius:16px;padding:24px;text-align:center;z-index:30;transition:transform .3s cubic-bezier(.4,0,.2,1);width:260px;box-shadow:0 20px 40px rgba(0,0,0,.5)}
+.sign-modal.show{transform:translate(-50%,-50%) scale(1)}
+.sign-modal h3{font-size:16px;color:#1a1a1a;margin-bottom:4px}
+.sign-modal p{font-size:12px;color:#666;margin-bottom:16px}
+.sign-modal .sign-btn{background:linear-gradient(135deg,#3d7aff,#1a5cff);color:#fff;border:none;padding:10px 40px;border-radius:20px;font-size:14px;font-weight:600;cursor:pointer}
+.sign-modal .sign-btn:hover{opacity:.9}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="status-bar" id="statusBar"><span class="time">9:41</span><div><span>📶</span> <span>🔋</span></div></div>
+
+  <!-- ===== 首页 ===== -->
+  <div class="home-page" id="homePage">
+    <div style="padding-top:44px">
+      <!-- 导航 -->
+      <div class="nav-bar">
+        <div class="logo">启航教育<span>考研一站式备考</span></div>
+        <div class="nav-right">
+          <button class="icon-btn">🔔</button>
+          <button class="icon-btn">👤</button>
+        </div>
+      </div>
+
+      <!-- 搜索 -->
+      <div class="search-bar"><span>🔍</span>搜索课程、老师、直播...</div>
+
+      <!-- Banner -->
+      <div class="banner">
+        <div class="banner-text">
+          <h2>26考研全程班</h2>
+          <p>名师团队护航 · 系统备考方案</p>
+          <div class="tag">🔥 限时优惠 ¥2,999</div>
+        </div>
+      </div>
+
+      <!-- 功能入口 -->
+      <div class="quick-nav">
+        <div class="quick-item" onclick="enterLive()">
+          <div class="qi-icon" style="background:linear-gradient(135deg,#fee2e2,#fecaca)">📹</div>
+          <span>直播课堂</span>
+        </div>
+        <div class="quick-item">
+          <div class="qi-icon" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe)">📚</div>
+          <span>精品课程</span>
+        </div>
+        <div class="quick-item">
+          <div class="qi-icon" style="background:linear-gradient(135deg,#d1fae5,#a7f3d0)">📝</div>
+          <span>真题练习</span>
+        </div>
+        <div class="quick-item">
+          <div class="qi-icon" style="background:linear-gradient(135deg,#fef3c7,#fde68a)">📊</div>
+          <span>学习计划</span>
+        </div>
+        <div class="quick-item">
+          <div class="qi-icon" style="background:linear-gradient(135deg,#ede9fe,#ddd6fe)">🎯</div>
+          <span>院校查询</span>
+        </div>
+        <div class="quick-item">
+          <div class="qi-icon" style="background:linear-gradient(135deg,#fce7f3,#fbcfe8)">👨‍🏫</div>
+          <span>名师团队</span>
+        </div>
+        <div class="quick-item">
+          <div class="qi-icon" style="background:linear-gradient(135deg,#e0f2fe,#bae6fd)">📖</div>
+          <span>考研资讯</span>
+        </div>
+        <div class="quick-item">
+          <div class="qi-icon" style="background:linear-gradient(135deg,#f1f5f9,#e2e8f0)">❓</div>
+          <span>答疑中心</span>
+        </div>
+      </div>
+
+      <!-- 正在直播 -->
+      <div class="section-header">
+        <h3>🔴 正在直播</h3>
+        <span class="more">查看全部 ›</span>
+      </div>
+      <div class="live-list">
+        <div class="live-item" onclick="enterLive()">
+          <div class="thumb"><div class="thumb-bg"></div><div class="live-tag">直播中</div><div class="subject">数学</div></div>
+          <div class="info">
+            <div class="title">高等数学强化 · 微积分专题（三）</div>
+            <div class="teacher">👨‍🏫 张宇老师</div>
+            <div class="meta"><span>👁 1.2万</span><span>💬 326</span></div>
+          </div>
+        </div>
+        <div class="live-item" onclick="enterLive()">
+          <div class="thumb"><div class="thumb-bg"></div><div class="live-tag">直播中</div><div class="subject">英语</div></div>
+          <div class="info">
+            <div class="title">考研英语阅读理解 · 真题精讲</div>
+            <div class="teacher">👩‍🏫 刘晓艳老师</div>
+            <div class="meta"><span>👁 8,432</span><span>💬 198</span></div>
+          </div>
+        </div>
+        <div class="live-item" onclick="enterLive()">
+          <div class="thumb"><div class="thumb-bg"></div><div class="live-tag">直播中</div><div class="subject">政治</div></div>
+          <div class="info">
+            <div class="title">毛中特精讲 · 考点串讲第5讲</div>
+            <div class="teacher">👨‍🏫 肖秀荣老师</div>
+            <div class="meta"><span>👁 5,600</span><span>💬 142</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 即将开播 -->
+      <div class="section-header">
+        <h3>📅 今日直播预告</h3>
+        <span class="more">全部日程 ›</span>
+      </div>
+      <div class="upcoming-list">
+        <div class="upcoming-card">
+          <div class="uc-cover"><div class="time-tag">14:00</div></div>
+          <div class="uc-info"><div class="uc-title">线性代数 · 矩阵运算</div><div class="uc-teacher">李永乐老师</div></div>
+        </div>
+        <div class="upcoming-card">
+          <div class="uc-cover"><div class="time-tag">16:30</div></div>
+          <div class="uc-info"><div class="uc-title">英语写作 · 大作文模板</div><div class="uc-teacher">王江涛老师</div></div>
+        </div>
+        <div class="upcoming-card">
+          <div class="uc-cover"><div class="time-tag">19:00</div></div>
+          <div class="uc-info"><div class="uc-title">马原重点 · 唯物辩证法</div><div class="uc-teacher">徐涛老师</div></div>
+        </div>
+        <div class="upcoming-card">
+          <div class="uc-cover"><div class="time-tag">20:30</div></div>
+          <div class="uc-info"><div class="uc-title">概率论 · 随机变量</div><div class="uc-teacher">张宇老师</div></div>
+        </div>
+      </div>
+
+      <div style="height:90px"></div>
+    </div>
+
+    <!-- 底部导航 -->
+    <div class="bottom-nav">
+      <div class="nav-item active"><div class="nav-icon">🏠</div><span>首页</span></div>
+      <div class="nav-item"><div class="nav-icon">📚</div><span>课程</span></div>
+      <div class="nav-item"><div class="nav-icon">📝</div><span>刷题</span></div>
+      <div class="nav-item"><div class="nav-icon">📊</div><span>计划</span></div>
+      <div class="nav-item"><div class="nav-icon">👤</div><span>我的</span></div>
+    </div>
+  </div>
+
+  <!-- ===== 直播页 ===== -->
+  <div class="live-page" id="livePage">
+    <div class="live-video"><div class="video-bg"></div></div>
+
+    <!-- 课件区域 -->
+    <div class="courseware">
+      <div class="cw-header">
+        <div class="dot" style="background:#ff5f57"></div>
+        <div class="dot" style="background:#febc2e"></div>
+        <div class="dot" style="background:#28c840"></div>
+        <span style="font-size:10px;color:#999;margin-left:8px">高数强化 · 课件第3页/共12页</span>
+      </div>
+      <div class="cw-content">
+        <h4>§3.2 定积分的计算方法</h4>
+        <div class="formula">
+          ∫<sub>a</sub><sup>b</sup> f(x)dx = F(b) - F(a)
+        </div>
+        <div class="step">
+          <span class="highlight">解题步骤：</span><br>
+          ① 找到 f(x) 的原函数 F(x)<br>
+          ② 验证 F'(x) = f(x)<br>
+          ③ 代入上下限计算差值
+        </div>
+      </div>
+    </div>
+
+    <!-- 老师小窗 -->
+    <div class="teacher-cam">
+      <div class="cam-bg">
+        <div class="t-avatar">👨‍🏫</div>
+        <span>张宇老师</span>
+        <span style="font-size:8px;opacity:.7">授课中</span>
+      </div>
+    </div>
+
+    <!-- 进度条 -->
+    <div class="progress-bar">
+      <div class="pb-label"><span>已授课 65%</span><span>01:32:00</span></div>
+      <div class="pb-track"><div class="pb-fill"></div></div>
+    </div>
+
+    <!-- 课节信息 -->
+    <div class="lesson-info">
+      <div class="li-title">高等数学强化 · 微积分专题（三）</div>
+      <span>26考研数学全程班 · 第18讲</span>
+    </div>
+
+    <!-- 顶部信息 -->
+    <div class="live-top">
+      <div class="teacher-info">
+        <div class="t-avatar-sm">👨‍🏫</div>
+        <span class="t-name">张宇</span>
+        <span class="t-badge">金牌讲师</span>
+      </div>
+    </div>
+    <div class="viewer-info">👁 12,431 在看</div>
+    <button class="close-btn" onclick="exitLive()">✕</button>
+
+    <!-- 聊天 -->
+    <div class="chat-area" id="chatArea"></div>
+    <div class="float-hearts" id="floatHearts"></div>
+
+    <!-- 互动按钮 -->
+    <div class="side-actions">
+      <button class="side-btn" onclick="toggleLike()">
+        <span style="font-size:16px">👍</span>
+        <span class="count">3.2k</span>
+      </button>
+      <button class="side-btn" onclick="doSign()">
+        <span style="font-size:16px">✋</span>
+        <span class="count">签到</span>
+      </button>
+      <button class="side-btn" onclick="raiseHand()">
+        <span style="font-size:16px">🙋</span>
+        <span class="count">提问</span>
+      </button>
+    </div>
+
+    <!-- 底部 -->
+    <div class="live-bottom">
+      <input class="chat-input" id="chatInput" placeholder="有问题可以在这里提问..." onkeydown="if(event.key==='Enter')sendChat()">
+      <button class="action-btn" onclick="sendChat()">💬</button>
+      <button class="action-btn primary" onclick="doSign()">✋ 签到</button>
+    </div>
+
+    <!-- 签到弹窗 -->
+    <div class="sign-modal" id="signModal">
+      <h3>✅ 课堂签到</h3>
+      <p>张宇老师发起了签到，确认你在认真学习</p>
+      <button class="sign-btn" onclick="confirmSign()">立即签到</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function enterLive(){
+  document.getElementById('homePage').classList.add('hidden');
+  document.getElementById('livePage').classList.add('show');
+  document.getElementById('statusBar').classList.add('light');
+  startChat();
+}
+function exitLive(){
+  document.getElementById('livePage').classList.remove('show');
+  document.getElementById('statusBar').classList.remove('light');
+  setTimeout(()=>document.getElementById('homePage').classList.remove('hidden'),300);
+  clearInterval(chatTimer);
+}
+
+const msgs=[
+  {n:'同学A',t:'老师这个公式怎么推导的？',c:'blue'},
+  {n:'同学B',t:'老师讲得好清楚',c:'blue'},
+  {n:'考研必胜',t:'这种题型考过好几次',c:'blue'},
+  {n:'小王同学',t:'能再讲一遍换元法吗',c:'blue'},
+  {n:'学习委员',t:'已做笔记 ✍️',c:'blue'},
+  {n:'奋斗的鱼',t:'老师辛苦了！',c:'blue'},
+  {n:'系统',t:'🎉 同学小红 完成了课堂练习',c:'sys'},
+  {n:'系统',t:'📢 签到已开启，请及时签到',c:'sys'},
+  {n:'学长来了',t:'去年考了类似的 10分大题',c:'gold'},
+];
+let chatTimer;
+function startChat(){
+  chatTimer=setInterval(()=>{
+    const m=msgs[Math.floor(Math.random()*msgs.length)];
+    addMsg(m.n,m.t,m.c);
+  },2500);
+}
+function addMsg(name,text,cls){
+  const a=document.getElementById('chatArea');
+  const d=document.createElement('div');
+  d.className='chat-msg';
+  d.innerHTML=cls==='sys'?`<span class="sys">📢 ${text}</span>`:`<span class="name ${cls||''}">${name}：</span>${text}`;
+  a.appendChild(d);
+  if(a.children.length>15)a.removeChild(a.firstChild);
+}
+function sendChat(){
+  const i=document.getElementById('chatInput');
+  if(i.value.trim()){addMsg('我',i.value,'blue');i.value='';}
+}
+function toggleLike(){
+  const c=document.getElementById('floatHearts');
+  const h=document.createElement('div');
+  h.className='heart';
+  h.textContent=['👍','❤️','💪','⭐'][Math.floor(Math.random()*4)];
+  h.style.right=Math.random()*15+'px';
+  c.appendChild(h);
+  setTimeout(()=>h.remove(),2000);
+}
+function doSign(){
+  document.getElementById('signModal').classList.add('show');
+}
+function confirmSign(){
+  document.getElementById('signModal').classList.remove('show');
+  addMsg('系统','✅ 签到成功！本节课已记录考勤','sys');
+}
+function raiseHand(){
+  addMsg('系统','🙋 你已举手提问，请等待老师解答','sys');
+}
+</script>
+</body>
+</html>
